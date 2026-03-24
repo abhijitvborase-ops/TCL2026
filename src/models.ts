@@ -3,6 +3,8 @@ export interface Player {
   id: number;
   name: string;
   photoUrl?: string;
+  sold?: boolean;
+  soldTo?: number | null;
 }
 
 export interface Team {

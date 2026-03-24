@@ -3,6 +3,7 @@ import { Player, Team, User, CompletedAuction } from '../models';
 import { FirebaseService } from './firebase.service';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { collection } from 'firebase/firestore';
+import { setDoc } from 'firebase/firestore';
 
 export type AuctionState = 'login' | 'public_view' | 'admin_lobby' | 'admin_view' | 'team_view' | 'auction_ended';
 export type DraftAnnouncement = { player: Player; team: Team };
@@ -333,7 +334,7 @@ await updateDoc(auctionRef, {
     this.lastDraftAction.set(null);
   }
 
-  createTeamOwner(teamName: string, ownerName: string, username: string, password: string, color: string) {
+  async createTeamOwner(teamName: string, ownerName: string, username: string, password: string, color: string) {
     if (this.currentUser()?.role !== 'admin') return;
 
     const newTeamId = Math.max(...this.teams().map(t => t.id), 0) + 1;
@@ -345,7 +346,8 @@ await updateDoc(auctionRef, {
       color: color
     };
     this.teams.update(teams => [...teams, newTeam]);
-
+    const teamRef = doc(this.firebase.db, "teams", String(newTeamId));
+await setDoc(teamRef, newTeam);
     const newUserId = Math.max(...this.users().map(u => u.id), 0) + 1;
     const newUser: User = {
         id: newUserId,
@@ -418,19 +420,27 @@ await updateDoc(auctionRef, {
     this.users.update((users) => users.filter((u) => u.teamId !== teamId));
   }
 
-  createPlayer(playerData: Omit<Player, 'id'>) {
-    if (this.currentUser()?.role !== 'admin') return;
-    const newPlayerId = Math.max(...this.masterPlayerList().map(p => p.id), 0) + 1;
-    const newPlayer: Player = {
-        id: newPlayerId,
-        ...playerData
-    };
-    const sortFn = (a: Player, b: Player) => a.name.localeCompare(b.name);
-    this.masterPlayerList.update(players => [...players, newPlayer].sort(sortFn));
-    // Also add to available players to keep lists in sync during lobby phase.
-    // This fixes a bug where newly added players could not be deleted.
-    this.availablePlayers.update(players => [...players, newPlayer].sort(sortFn));
-  }
+  async createPlayer(playerData: Omit<Player, 'id'>) {
+  if (this.currentUser()?.role !== 'admin') return;
+
+  const newPlayerId = Date.now();
+
+  const newPlayer: any = {
+  id: newPlayerId,
+  name: playerData.name || "",
+
+  // 👇 fix
+  photoUrl: playerData.photoUrl || "",
+
+  sold: false,
+  soldTo: null
+};
+
+  // 🔥 Firebase मध्ये save
+  const playerRef = doc(this.firebase.db, "players", String(newPlayerId));
+
+  await setDoc(playerRef, newPlayer);
+}
 
   updatePlayer(playerId: number, updatedData: Omit<Player, 'id'>) {
     if (this.currentUser()?.role !== 'admin') return;
