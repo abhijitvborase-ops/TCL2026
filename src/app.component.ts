@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, computed, AfterView
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
+import { FirebaseService } from './services/firebase.service';
 
 import { AuctionService } from './services/auction.service';
 import { DiceComponent } from './components/dice/dice.component';
@@ -19,7 +20,9 @@ declare var XLSX: any;
 })
 export class AppComponent implements OnInit, AfterViewChecked {
   auctionService = inject(AuctionService);
+  firebase = inject(FirebaseService);
 
+  selectedFile: File | null = null;
   // Form signals for login
   loginUsername = signal('');
   loginPassword = signal('');
@@ -185,27 +188,31 @@ export class AppComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  onCreatePlayer() {
-    if (this.newPlayerName()) {
-        this.auctionService.createPlayer({
-            name: this.newPlayerName(),
-            photoUrl: this.newPlayerPhotoUrl()
-        });
-        this.newPlayerName.set('');
-        this.newPlayerPhotoUrl.set(undefined);
-    }
+  async onCreatePlayer() {
+  if (!this.newPlayerName()) return;
+
+  let photoUrl = "";
+
+  if (this.selectedFile) {
+    photoUrl = await this.firebase.uploadImage(this.selectedFile);
   }
 
-  onPlayerPhotoUpload(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.newPlayerPhotoUrl.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  console.log("Uploaded URL:", photoUrl);
+
+  this.auctionService.createPlayer({
+    name: this.newPlayerName(),
+    photoUrl: photoUrl
+  });
+
+  this.newPlayerName.set('');
+  this.selectedFile = null;
+}
+  onPlayerPhotoUpload(event: any) {
+  const file = event.target.files[0];
+  if (file) {
+    this.selectedFile = file;
   }
+}
 
   startEditingPlayer(player: Player) {
     this.editingPlayer.set(player);
