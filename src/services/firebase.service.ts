@@ -25,21 +25,23 @@ export class FirebaseService {
     this.db = getFirestore(app);
   }
 
-  // 🔥 ADD THIS FUNCTION
   async uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'tcl_upload'); // 👈 तुझं preset
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'tcl_upload'); // 👈 preset नाव
 
-    const res = await fetch(
-      'https://api.cloudinary.com/v1_1/dzlyg7wog/image/upload',
-      {
-        method: 'POST',
-        body: formData
-      }
-    );
+  const res = await fetch(
+    'https://api.cloudinary.com/v1_1/dzlyg7wog/image/upload', // 👈 FIXED
+    {
+      method: 'POST',
+      body: formData
+    }
+  );
 
-    const data = await res.json();
-    return data.secure_url; // 👈 image URL return
-  }
+  const data = await res.json();
+
+  console.log("Cloudinary response:", data); // 👈 debug
+
+  return data.secure_url;
+}
 }
