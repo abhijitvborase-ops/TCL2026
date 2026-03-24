@@ -179,13 +179,13 @@ export class AuctionService {
 
   const auctionRef = doc(this.firebase.db, "auction", "live");
 
-  await updateDoc(auctionRef, {
-    isActive: true,
-    currentRound: 1,
-    turnIndex: 0,
-    roundOrder: [],
-    diceTeamId: null
-  });
+  await setDoc(auctionRef, {
+  isActive: true,
+  currentRound: 1,
+  turnIndex: 0,
+  diceTeamId: null,
+  roundOrder: []
+});
 
   this.auctionState.set('admin_view');
 }
