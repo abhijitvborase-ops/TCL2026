@@ -17,6 +17,7 @@
     "@angular/core": "^21.0.0",
     "@angular/forms": "^21.0.0",
     "@angular/platform-browser": "^21.0.0",
+    "firebase": "^12.11.0",
     "rxjs": "^7.8.2",
     "tailwindcss": "latest"
   },
