@@ -4,6 +4,7 @@ import { FirebaseService } from './firebase.service';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { collection } from 'firebase/firestore';
 import { setDoc } from 'firebase/firestore';
+import { getDocs } from 'firebase/firestore';
 
 export type AuctionState = 'login' | 'public_view' | 'admin_lobby' | 'admin_view' | 'team_view' | 'auction_ended';
 export type DraftAnnouncement = { player: Player; team: Team };
@@ -231,16 +232,27 @@ export class AuctionService {
   async startAuction() {
   if (this.currentUser()?.role !== 'admin') return;
 
+  // 🔥 ADD THIS (RESET PLAYERS)
+  const teamsRef = collection(this.firebase.db, "teams");
+  const snapshot = await getDocs(teamsRef);
+
+  for (const docSnap of snapshot.docs) {
+    await updateDoc(doc(this.firebase.db, "teams", docSnap.id), {
+      players: []
+    });
+  }
+
+  // 🔥 existing code
   const auctionRef = doc(this.firebase.db, "auction", "live");
 
   await setDoc(auctionRef, {
-  isActive: true,
-  currentRound: 1,
-  turnIndex: 0,
-  diceTeamId: null,
-  roundOrder: [],
-  isRolling: false
-});
+    isActive: true,
+    currentRound: 1,
+    turnIndex: 0,
+    diceTeamId: null,
+    roundOrder: [],
+    isRolling: false
+  });
 
   this.auctionState.set('admin_view');
 }
