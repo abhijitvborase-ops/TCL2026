@@ -111,12 +111,12 @@ export class AuctionService {
 
   private updateAuctionDataWithTeams() {
     if (!this.latestAuctionData || this.teams().length === 0) return;
-
+   
     const data = this.latestAuctionData;
     this.currentRound.set(data.currentRound || 1);
     this.turnIndex.set(data.turnIndex || 0);
     this.isAuctionActive.set(data.isActive || false);
-
+    this.isRolling.set(data.isRolling || false);
     // 🔥 dice result
     this.diceResult.set(
       data.diceTeamId
@@ -238,7 +238,8 @@ export class AuctionService {
   currentRound: 1,
   turnIndex: 0,
   diceTeamId: null,
-  roundOrder: []
+  roundOrder: [],
+  isRolling: false
 });
 
   this.auctionState.set('admin_view');
@@ -255,30 +256,34 @@ export class AuctionService {
     return;
   }
 
-  this.isRolling.set(true);
+  const auctionRef = doc(this.firebase.db, "auction", "live");
 
+  // 🔥 START rolling (ALL USERS)
+  await updateDoc(auctionRef, {
+    isRolling: true
+  });
+// 🔥 WAIT for animation (2 seconds)
+await new Promise(resolve => setTimeout(resolve, 2000));
   const availableToPick = allTeams.filter(
     t => !teamsInRound.find(inRound => inRound.id === t.id)
   );
 
   if (availableToPick.length === 0) {
-    this.isRolling.set(false);
+    await updateDoc(auctionRef, { isRolling: false });
     return;
   }
 
   const pickedTeam =
     availableToPick[Math.floor(Math.random() * availableToPick.length)];
 
-  const auctionRef = doc(this.firebase.db, "auction", "live");
-
   const currentIds = teamsInRound.map(t => t.id);
 
+  // 🔥 RESULT + STOP rolling
   await updateDoc(auctionRef, {
     diceTeamId: pickedTeam.id,
-    roundOrder: [...new Set([...currentIds, pickedTeam.id])]
+    roundOrder: [...new Set([...currentIds, pickedTeam.id])],
+    isRolling: false
   });
-
-  this.isRolling.set(false);
 }
   async draftPlayer(player: Player) {
     const pickingTeam = this.pickingTeam();
