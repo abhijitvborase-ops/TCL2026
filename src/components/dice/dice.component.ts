@@ -1,4 +1,3 @@
-
 import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuctionService } from '../../services/auction.service';
@@ -15,25 +14,31 @@ export class DiceComponent {
   auctionService = inject(AuctionService);
   
   isRolling = this.auctionService.isRolling;
-  diceResultTeam = this.auctionService.diceResult;
+
+  // 🔥 IMPORTANT (rename for HTML use)
+  diceResult = this.auctionService.diceResult;
+
   teams = this.auctionService.teams;
   
   cubeClass = computed(() => {
     if (this.isRolling()) {
       return 'rolling';
     }
-    const team = this.diceResultTeam();
+
+    const team = this.diceResult();
     if (team) {
       const currentTeams = this.teams();
       const teamIndex = currentTeams.findIndex(t => t.id === team.id);
+
       switch (teamIndex) {
-        case 0: return 'show-front'; // Warriors
-        case 1: return 'show-right'; // Stallions
-        case 2: return 'show-back';  // Titans
-        case 3: return 'show-left';  // Gladiators
-        default: return ''; // For teams beyond the 4th, or if not found
+        case 0: return 'show-front';
+        case 1: return 'show-right';
+        case 2: return 'show-back';
+        case 3: return 'show-left';
+        default: return '';
       }
     }
+
     return '';
   });
 }
