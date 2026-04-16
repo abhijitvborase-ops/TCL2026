@@ -232,7 +232,7 @@ export class AuctionService {
   async startAuction() {
   if (this.currentUser()?.role !== 'admin') return;
 
-  // 🔥 ADD THIS (RESET PLAYERS)
+  // 🔥 RESET TEAMS
   const teamsRef = collection(this.firebase.db, "teams");
   const snapshot = await getDocs(teamsRef);
 
@@ -242,7 +242,18 @@ export class AuctionService {
     });
   }
 
-  // 🔥 existing code
+  // 🔥 RESET PLAYERS
+  const playersRef = collection(this.firebase.db, "players");
+  const playerSnapshot = await getDocs(playersRef);
+
+  for (const docSnap of playerSnapshot.docs) {
+    await updateDoc(doc(this.firebase.db, "players", docSnap.id), {
+      sold: false,
+      soldTo: null
+    });
+  }
+
+  // 🔥 START AUCTION
   const auctionRef = doc(this.firebase.db, "auction", "live");
 
   await setDoc(auctionRef, {
