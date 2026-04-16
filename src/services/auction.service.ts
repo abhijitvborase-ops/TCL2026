@@ -183,21 +183,39 @@ export class AuctionService {
     this.auctionHistory.set([]);
   }
 
-  login(username: string, password?: string) {
-    const user = this.users().find(u => u.username === username && u.password === password);
-    if (user) {
-      this.currentUser.set(user);
-      if (user.role === 'admin') {
-        this.auctionState.set('admin_lobby');
-      } else {
-        this.auctionState.set('team_view');
-      }
-      this.errorMessage.set(null);
-    } else {
-      this.errorMessage.set('Invalid username or password.');
-    }
+  login(username: string) {
+  // 🔥 admin check
+  if (username === 'admin') {
+    this.currentUser.set({
+      id: 1,
+      username: 'admin',
+      role: 'admin'
+    } as any);
+
+    this.auctionState.set('admin_lobby');
+    this.errorMessage.set(null);
+    return;
   }
 
+  // 🔥 team match करून user बनव
+  const team = this.teams().find(t => 
+    t.owner.toLowerCase().includes(username.toLowerCase())
+  );
+
+  if (team) {
+    this.currentUser.set({
+      id: team.id,
+      username: username,
+      role: 'team_owner',
+      teamId: team.id
+    });
+
+    this.auctionState.set('team_view');
+    this.errorMessage.set(null);
+  } else {
+    this.errorMessage.set('User not found');
+  }
+}
   logout() {
     this.currentUser.set(null);
     this.auctionState.set('login');

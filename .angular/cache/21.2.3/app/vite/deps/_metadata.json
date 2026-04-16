@@ -1,43 +1,49 @@
 {
-  "hash": "5463ef79",
-  "configHash": "6dc0fb9c",
+  "hash": "9d52532a",
+  "configHash": "38bd96c4",
   "lockfileHash": "e100f6f8",
-  "browserHash": "d4a2ba94",
+  "browserHash": "0e1bc8b9",
   "optimized": {
     "@angular/common": {
       "src": "../../../../../../node_modules/@angular/common/fesm2022/common.mjs",
       "file": "@angular_common.js",
-      "fileHash": "882b7158",
+      "fileHash": "45f1a4c4",
       "needsInterop": false
     },
     "@angular/core": {
       "src": "../../../../../../node_modules/@angular/core/fesm2022/core.mjs",
       "file": "@angular_core.js",
-      "fileHash": "333db8e4",
+      "fileHash": "355fd8a5",
       "needsInterop": false
     },
     "@angular/forms": {
       "src": "../../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
       "file": "@angular_forms.js",
-      "fileHash": "f9785ac9",
+      "fileHash": "0bd0d985",
       "needsInterop": false
     },
     "@angular/platform-browser": {
       "src": "../../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
       "file": "@angular_platform-browser.js",
-      "fileHash": "fc3da50b",
+      "fileHash": "5186c706",
       "needsInterop": false
     },
     "firebase/app": {
       "src": "../../../../../../node_modules/firebase/app/dist/esm/index.esm.js",
       "file": "firebase_app.js",
-      "fileHash": "978ca11c",
+      "fileHash": "9570614a",
+      "needsInterop": false
+    },
+    "firebase/auth": {
+      "src": "../../../../../../node_modules/firebase/auth/dist/esm/index.esm.js",
+      "file": "firebase_auth.js",
+      "fileHash": "6a118104",
       "needsInterop": false
     },
     "firebase/firestore": {
       "src": "../../../../../../node_modules/firebase/firestore/dist/esm/index.esm.js",
       "file": "firebase_firestore.js",
-      "fileHash": "148b8d92",
+      "fileHash": "ef653d9d",
       "needsInterop": false
     }
   },
@@ -48,8 +54,8 @@
     "chunk-L7GZKQ5W": {
       "file": "chunk-L7GZKQ5W.js"
     },
-    "chunk-R34N625B": {
-      "file": "chunk-R34N625B.js"
+    "chunk-YID456VA": {
+      "file": "chunk-YID456VA.js"
     },
     "chunk-GOMI4DH3": {
       "file": "chunk-GOMI4DH3.js"

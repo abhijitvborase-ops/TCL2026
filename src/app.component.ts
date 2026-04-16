@@ -89,9 +89,16 @@ export class AppComponent implements OnInit, AfterViewChecked {
   }
   
   onLogin() {
-  this.firebase.login(this.loginUsername(), this.loginPassword())
+  const username = this.loginUsername();
+  const password = this.loginPassword();
+  const email = username + "@tcl.com";
+
+  this.firebase.login(email, password)
     .then(() => {
       alert("Login success");
+
+      // 🔥 IMPORTANT LINE (missing)
+      this.auctionService.login(username);
     })
     .catch(() => {
       alert("Wrong username/password");
@@ -139,7 +146,8 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   onCreateTeam() {
     if (this.newTeamName() && this.newOwnerName() && this.newUsername() && this.newPassword()) {
-      this.firebase.register(this.newUsername(), this.newPassword());
+     const email = this.newUsername() + "@tcl.com";
+this.firebase.register(email, this.newPassword());
       this.auctionService.createTeamOwner(
           this.newTeamName(), 
           this.newOwnerName(), 
