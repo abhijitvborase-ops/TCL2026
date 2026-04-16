@@ -9,7 +9,7 @@ import { AuctionService } from '../../services/auction.service';
   imports: [CommonModule],
   templateUrl: './dice.component.html',
   styleUrls: ['./dice.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class DiceComponent {
   auctionService = inject(AuctionService);

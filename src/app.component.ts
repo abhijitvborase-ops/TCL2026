@@ -16,7 +16,7 @@ declare var XLSX: any;
   standalone: true,
   imports: [CommonModule, FormsModule, DiceComponent],
   templateUrl: './app.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class AppComponent implements OnInit, AfterViewChecked {
   auctionService = inject(AuctionService);
@@ -89,9 +89,14 @@ export class AppComponent implements OnInit, AfterViewChecked {
   }
   
   onLogin() {
-    this.auctionService.login(this.loginUsername(), this.loginPassword());
-  }
-
+  this.firebase.login(this.loginUsername(), this.loginPassword())
+    .then(() => {
+      alert("Login success");
+    })
+    .catch(() => {
+      alert("Wrong username/password");
+    });
+}
   onEnterPublicView() {
     this.auctionService.enterPublicView();
   }
@@ -134,7 +139,8 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   onCreateTeam() {
     if (this.newTeamName() && this.newOwnerName() && this.newUsername() && this.newPassword()) {
-        this.auctionService.createTeamOwner(
+      this.firebase.register(this.newUsername(), this.newPassword());
+      this.auctionService.createTeamOwner(
           this.newTeamName(), 
           this.newOwnerName(), 
           this.newUsername(), 

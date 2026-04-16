@@ -42,6 +42,9 @@ export class AuctionService {
   errorMessage = signal<string | null>(null);
   lastDraftedPlayerInfo = signal<DraftAnnouncement | null>(null);
 
+  // Store latest auction data from Firebase
+  private latestAuctionData: any = null;
+
   // Undo functionality
   lastDraftAction = signal<{ player: Player; teamId: number } | null>(null);
 
@@ -74,6 +77,7 @@ export class AuctionService {
   canUndo = computed(() => this.lastDraftAction() !== null);
 
   constructor(private firebase: FirebaseService) {
+    console.log("AuctionService constructor called");
     this.loadStateFromStorage();
     this.listenToTeams();   // 👈 FIRST
     this.listenToPlayers();
@@ -94,6 +98,38 @@ export class AuctionService {
     effect(() => {
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(this.auctionHistory()));
     });
+  }
+
+  private updateTeamsWithPlayers(players: Player[]) {
+    this.teams.update(teams => {
+      return teams.map(team => ({
+        ...team,
+        players: players.filter(p => p.sold && p.soldTo === team.id)
+      }));
+    });
+  }
+
+  private updateAuctionDataWithTeams() {
+    if (!this.latestAuctionData || this.teams().length === 0) return;
+
+    const data = this.latestAuctionData;
+    this.currentRound.set(data.currentRound || 1);
+    this.turnIndex.set(data.turnIndex || 0);
+    this.isAuctionActive.set(data.isActive || false);
+
+    // 🔥 dice result
+    this.diceResult.set(
+      data.diceTeamId
+        ? this.teams().find(t => t.id === data.diceTeamId) || null
+        : null
+    );
+
+    // 🔥 round order
+    this.roundOrder.set(
+      (data.roundOrder || [])
+        .map((id: number) => this.teams().find(t => t.id === id))
+        .filter(Boolean) as Team[]
+    );
   }
 
   private handleStorageChange(event: StorageEvent) {
@@ -242,6 +278,15 @@ export class AuctionService {
       return [...teams];
     });
     
+    // Update team document in Firebase with new players list
+    const teamRef = doc(this.firebase.db, "teams", String(pickingTeam.id));
+    const updatedTeam = this.teams().find(t => t.id === pickingTeam.id);
+    if (updatedTeam) {
+      await updateDoc(teamRef, {
+        players: updatedTeam.players
+      });
+    }
+    
     // Set the last draft action for potential undo
     this.lastDraftAction.set({ player, teamId: pickingTeam.id });
 
@@ -321,6 +366,15 @@ await updateDoc(auctionRef, {
       }
       return [...teams];
     });
+
+    // Update team document in Firebase with updated players list
+    const teamRef = doc(this.firebase.db, "teams", String(teamId));
+    const updatedTeam = this.teams().find(t => t.id === teamId);
+    if (updatedTeam) {
+      await updateDoc(teamRef, {
+        players: updatedTeam.players
+      });
+    }
 
     // Add player back to available players and sort by ID to maintain order
     this.availablePlayers.update(players => 
@@ -523,33 +577,28 @@ listenToFirebaseAuction() {
   const auctionRef = doc(this.firebase.db, "auction", "live");
 
   onSnapshot(auctionRef, (docSnap) => {
+    console.log("Firebase auction snapshot received:", docSnap.exists(), docSnap.data());
     if (docSnap.exists()) {
-      const data: any = docSnap.data();
-
-      this.currentRound.set(data.currentRound || 1);
-      this.turnIndex.set(data.turnIndex || 0);
-      this.isAuctionActive.set(data.isActive || false);
-
-      // 🔥 dice result
-      this.diceResult.set(
-        data.diceTeamId
-          ? this.teams().find(t => t.id === data.diceTeamId) || null
-          : null
-      );
-
-      // 🔥 round order
-      this.roundOrder.set(
-  (data.roundOrder || [])
-    .map((id: number) => this.teams().find(t => t.id === id))
-    .filter(Boolean) as Team[]
-);
+      this.latestAuctionData = docSnap.data();
+      this.updateAuctionDataWithTeams();
+    } else {
+      this.latestAuctionData = null;
+      // Reset auction data
+      this.currentRound.set(1);
+      this.turnIndex.set(0);
+      this.isAuctionActive.set(false);
+      this.diceResult.set(null);
+      this.roundOrder.set([]);
     }
+  }, (error) => {
+    console.error("Error listening to auction:", error);
   });
 }
 listenToPlayers() {
   const playersRef = collection(this.firebase.db, "players");
 
   onSnapshot(playersRef, (snapshot) => {
+    console.log("Firebase players snapshot received:", snapshot.docs.length, "players");
     const players = snapshot.docs.map(doc => ({
       id: Number(doc.id),
       ...doc.data()
@@ -559,18 +608,33 @@ listenToPlayers() {
     this.availablePlayers.set(
   players.filter((p: any) => !p.sold)
 );
+    
+    // Update teams with sold players
+    this.updateTeamsWithPlayers(players);
+  }, (error) => {
+    console.error("Error listening to players:", error);
   });
 }
+
 listenToTeams() {
   const teamsRef = collection(this.firebase.db, "teams");
 
   onSnapshot(teamsRef, (snapshot) => {
-    const teams = snapshot.docs.map(doc => ({
+    console.log("Firebase teams snapshot received:", snapshot.docs.length, "teams");
+    const teams = snapshot.docs.map((doc: any) => ({
       id: Number(doc.id),
       ...doc.data()
     })) as any;
 
     this.teams.set(teams);
+    
+    // After teams are loaded, try to update auction data that depends on teams
+    // this!.updateAuctionDataWithTeams();
+    
+    // Also update teams with players if players are already loaded
+    this.updateTeamsWithPlayers(this.masterPlayerList());
+  }, (error) => {
+    console.error("Error listening to teams:", error);
   });
 }
 }
