@@ -366,7 +366,8 @@
             <h3 class="text-lg font-semibold mb-4 text-gray-200">Available Players ({{ auctionService.availablePlayers().length }})</h3>
             <div class="space-y-2 max-h-[600px] overflow-y-auto pr-2">
               @for(player of auctionService.availablePlayers(); track player.id) {
-                 <div class="bg-gray-700/80 p-3 rounded-lg flex justify-between items-center">
+                 <div class="bg-gray-700/80 p-3 rounded-lg flex justify-between items-center cursor-pointer"
+     (click)="openPlayerViewer($index)">
                    <div class="flex items-center gap-3">
                       @if(player.photoUrl) {
                         <img [src]="player.photoUrl" alt="{{ player.name }}" class="w-10 h-10 object-cover rounded-full border border-gray-500">
@@ -482,7 +483,8 @@
                 <h3 class="text-lg font-semibold mb-4 text-gray-200">Available Players ({{ auctionService.availablePlayers().length }})</h3>
                 <div class="space-y-2 max-h-[600px] overflow-y-auto pr-2">
                     @for(player of auctionService.availablePlayers(); track player.id) {
-                    <div class="bg-gray-700/80 p-3 rounded-lg flex justify-between items-center">
+                    <div class="bg-gray-700/80 p-3 rounded-lg flex justify-between items-center cursor-pointer"
+     (click)="openPlayerViewer($index)">
                         <div class="flex items-center gap-3">
                           @if(player.photoUrl) {
                             <img [src]="player.photoUrl" alt="{{ player.name }}" class="w-10 h-10 object-cover rounded-full border border-gray-500">
@@ -494,9 +496,14 @@
                           <p class="font-bold text-white">{{ player.name }}</p>
                         </div>
                         @if(auctionService.isMyTurn()) {
-                        <button (click)="onDraftPlayerClick(player)" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg text-sm flex items-center">
-                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Draft
-                        </button>
+                        <button 
+  (click)="onDraftPlayerClick(player); $event.stopPropagation()"
+  class="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded flex items-center">
+  
+  <i data-lucide="plus" class="w-4 h-4 mr-1"></i>
+  Draft
+
+</button>
                         }
                     </div>
                     } @empty {
@@ -762,4 +769,11 @@
       </div>
     </div>
   }
+ <app-player-viewer 
+  *ngIf="showViewer"
+  [players]="auctionService.availablePlayers()"
+  [startIndex]="viewerIndex"
+  [closeViewer]="() => showViewer = false"
+  [onDraft]="(player) => onDraftPlayerClick(player)">
+</app-player-viewer>
 </div>

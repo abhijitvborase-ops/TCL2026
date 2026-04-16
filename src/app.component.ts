@@ -7,6 +7,7 @@ import { FirebaseService } from './services/firebase.service';
 import { AuctionService } from './services/auction.service';
 import { DiceComponent } from './components/dice/dice.component';
 import { Player, Team, User } from './models';
+import { PlayerViewerComponent } from './components/player-viewer/player-viewer.component';
 
 declare var lucide: any;
 declare var XLSX: any;
@@ -14,7 +15,7 @@ declare var XLSX: any;
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, DiceComponent],
+  imports: [CommonModule, FormsModule, DiceComponent, PlayerViewerComponent],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Default,
 })
@@ -68,6 +69,13 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   // Signal for draft confirmation
   draftConfirmation = signal<Player | null>(null);
+  showViewer = false;
+viewerIndex = 0;
+
+openPlayerViewer(index: number) {
+  this.viewerIndex = index;
+  this.showViewer = true;
+}
 
   // Signal for admin lobby tabs
   adminLobbyView = signal<'create' | 'manage'>('create');
