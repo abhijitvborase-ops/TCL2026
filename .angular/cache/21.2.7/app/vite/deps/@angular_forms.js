@@ -1,6 +1,6 @@
 import {
   getDOM
-} from "./chunk-Y4A4PNS6.js";
+} from "./chunk-IBSN242Q.js";
 import {
   ApplicationRef,
   ChangeDetectorRef,
@@ -48,7 +48,7 @@ import {
   ɵɵdirectiveInject,
   ɵɵgetInheritedFactory,
   ɵɵlistener
-} from "./chunk-L7GZKQ5W.js";
+} from "./chunk-LIAPGNGM.js";
 import {
   __spreadProps,
   __spreadValues
@@ -746,7 +746,7 @@ var ngModelWithFormGroupExample = `
       <input [(ngModel)]="showMoreControls" [ngModelOptions]="{standalone: true}">
   </div>
 `;
-var VERSION = new Version("21.2.5");
+var VERSION = new Version("21.2.9");
 function controlParentException(nameOrIndex) {
   return new RuntimeError(1050, `formControlName must be used with a parent formGroup or formArray directive. You'll want to add a formGroup/formArray
       directive and pass it an existing FormGroup/FormArray instance (you can create one in your class).
@@ -946,7 +946,7 @@ function assertControlPresent(parent, isGroup, key) {
 function assertAllValuesPresent(control, isGroup, value) {
   control._forEachChild((_, key) => {
     if (value[key] === void 0) {
-      throw new RuntimeError(1002, typeof ngDevMode === "undefined" || ngDevMode ? missingControlValueError(isGroup, key) : "");
+      throw new RuntimeError(-1002, typeof ngDevMode === "undefined" || ngDevMode ? missingControlValueError(isGroup, key) : "");
     }
   });
 }
@@ -1002,7 +1002,7 @@ var AbstractControl = class {
     return this.status === INVALID;
   }
   get pending() {
-    return this.status == PENDING;
+    return this.status === PENDING;
   }
   get disabled() {
     return this.status === DISABLED;

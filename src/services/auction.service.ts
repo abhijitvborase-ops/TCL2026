@@ -119,6 +119,17 @@ export class AuctionService {
     this.currentRound.set(data.currentRound || 1);
     this.turnIndex.set(data.turnIndex || 0);
     this.isAuctionActive.set(data.isActive || false);
+    // 🔥 if auction ended → force screen change
+if (data.status === 'ended') {
+  this.auctionState.set('auction_ended');
+
+  if (data.finalTeams) {
+    this.teams.set(data.finalTeams);
+  }
+
+  return;
+
+}
     // 🔥 only update if changed (IMPORTANT)
 if (this.isRolling() !== (data.isRolling || false)) {
   this.isRolling.set(data.isRolling || false);
@@ -227,10 +238,13 @@ if (newOrder.length > 0) {
   }
 }
   logout() {
-    this.currentUser.set(null);
-    this.auctionState.set('login');
-  }
+  this.currentUser.set(null);
 
+  // 🔥 IMPORTANT: stop auto redirect
+  this.latestAuctionData = null;
+
+  this.auctionState.set('login');
+}
   enterPublicView() {
     this.auctionState.set('public_view');
   }
@@ -379,6 +393,15 @@ await Promise.all([
     
     if (nextRoundNumber > this.MAX_ROUNDS || this.availablePlayers().length === 0) {
       this.archiveAuction();
+      const teamsData = this.teams();
+
+const auctionRef = doc(this.firebase.db, "auction", "live");
+
+await updateDoc(auctionRef, {
+  isActive: false,
+  status: 'ended',
+  finalTeams: teamsData   // 🔥 SAVE FINAL DATA
+});
       this.auctionState.set('auction_ended');
       localStorage.setItem(AUCTION_STATUS_KEY, 'inactive');
       this.isAuctionActive.set(false);
@@ -621,14 +644,23 @@ await setDoc(teamRef, newTeam);
     this.auctionHistory.update(history => [newRecord, ...history]);
   }
 
-  stopAuction() {
-    if (this.currentUser()?.role !== 'admin') return;
-    this.archiveAuction();
-    localStorage.setItem(AUCTION_STATUS_KEY, 'inactive');
-    this.isAuctionActive.set(false);
-    this.auctionState.set('auction_ended');
-  }
+  async stopAuction() {
+  if (this.currentUser()?.role !== 'admin') return;
 
+  this.archiveAuction();
+
+  const auctionRef = doc(this.firebase.db, "auction", "live");
+
+  const teamsData = this.teams(); // 🔥 IMPORTANT
+
+  await updateDoc(auctionRef, {
+    isActive: false,
+    status: 'ended',
+    finalTeams: teamsData   // 🔥 ADD THIS
+  });
+
+  this.auctionState.set('auction_ended');
+}
   deletePastAuction(auctionId: number) {
     if (this.currentUser()?.role !== 'admin') return;
     this.auctionHistory.update(history => history.filter(a => a.id !== auctionId));
@@ -637,7 +669,10 @@ listenToFirebaseAuction() {
   const auctionRef = doc(this.firebase.db, "auction", "live");
 
   onSnapshot(auctionRef, (docSnap) => {
-
+// 🔥 allow public users also
+if (!this.currentUser() && this.auctionState() !== 'public_view') {
+  return;
+}
   if (!docSnap.exists()) {
     this.latestAuctionData = null;
     this.currentRound.set(1);
@@ -698,7 +733,11 @@ listenToTeams() {
       ...doc.data()
     })) as any;
 
-    // 🔥 only update if changed
+// 🔥 if auction ended → DO NOT override final teams
+if (this.auctionState() === 'auction_ended') {
+  return;
+}
+
 if (JSON.stringify(this.teams()) !== JSON.stringify(teams)) {
   this.teams.set(teams);
 }

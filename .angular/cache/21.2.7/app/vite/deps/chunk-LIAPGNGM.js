@@ -3226,7 +3226,7 @@ var Version = class {
     this.patch = parts.slice(2).join(".");
   }
 };
-var VERSION = new Version("21.2.5");
+var VERSION = new Version("21.2.9");
 var DOC_PAGE_BASE_URL = (() => {
   const full = VERSION.full;
   const isPreRelease = full.includes("-next") || full.includes("-rc") || full === "0.0.0-PLACEHOLDER";
@@ -7270,9 +7270,9 @@ function getTNodeFromLView(lView) {
 function ɵɵinjectAttribute(attrNameToInject) {
   return injectAttributeImpl(getCurrentTNode(), attrNameToInject);
 }
-var Attribute2 = makeParamDecorator("Attribute", (attributeName2) => ({
-  attributeName: attributeName2,
-  __NG_ELEMENT_ID__: () => ɵɵinjectAttribute(attributeName2)
+var Attribute2 = makeParamDecorator("Attribute", (attributeName) => ({
+  attributeName,
+  __NG_ELEMENT_ID__: () => ɵɵinjectAttribute(attributeName)
 }));
 var _reflect = null;
 function getReflect() {
@@ -8081,7 +8081,7 @@ var TransferState = class _TransferState {
         }
       }
     }
-    return JSON.stringify(this.store).replace(/</g, "\\u003C");
+    return JSON.stringify(this.store).replace(/</g, "\\u003C").replace(/\//g, "\\u002F");
   }
 };
 function retrieveTransferredState(doc, appId) {
@@ -9424,10 +9424,37 @@ function ɵɵtrustConstantResourceUrl(url) {
   }
   return trustedScriptURLFromString(url[0]);
 }
-var SRC_RESOURCE_TAGS = /* @__PURE__ */ new Set(["embed", "frame", "iframe", "media", "script"]);
-var HREF_RESOURCE_TAGS = /* @__PURE__ */ new Set(["base", "link", "script"]);
+var RESOURCE_MAP = {
+  "embed": {
+    "src": true
+  },
+  "frame": {
+    "src": true
+  },
+  "iframe": {
+    "src": true
+  },
+  "media": {
+    "src": true
+  },
+  "script": {
+    "src": true,
+    "href": true,
+    "xlink:href": true
+  },
+  "base": {
+    "href": true
+  },
+  "link": {
+    "href": true
+  },
+  "object": {
+    "data": true,
+    "codebase": true
+  }
+};
 function getUrlSanitizer(tag, prop) {
-  const isResource = prop === "src" && SRC_RESOURCE_TAGS.has(tag) || prop === "href" && HREF_RESOURCE_TAGS.has(tag) || prop === "xlink:href" && tag === "script";
+  const isResource = RESOURCE_MAP[tag]?.[prop] === true;
   return isResource ? ɵɵsanitizeResourceUrl : ɵɵsanitizeUrl;
 }
 function ɵɵsanitizeUrlOrResourceUrl(unsafeUrl, tag, prop) {
@@ -9450,18 +9477,38 @@ function getSanitizer() {
   const lView = getLView();
   return lView && lView[ENVIRONMENT].sanitizer;
 }
-var attributeName = /* @__PURE__ */ new Set(["attributename"]);
+var SECURITY_SENSITIVE_ATTRIBUTE_NAMES = /* @__PURE__ */ new Set(["href", "xlink:href"]);
 var SECURITY_SENSITIVE_ELEMENTS = {
-  "iframe": /* @__PURE__ */ new Set(["sandbox", "allow", "allowfullscreen", "referrerpolicy", "csp", "fetchpriority"]),
-  "animate": attributeName,
-  "set": attributeName,
-  "animatemotion": attributeName,
-  "animatetransform": attributeName
+  "iframe": {
+    "sandbox": true,
+    "allow": true,
+    "allowfullscreen": true,
+    "referrerpolicy": true,
+    "csp": true,
+    "fetchpriority": true
+  },
+  "animate": {
+    "attributename": true,
+    "to": SECURITY_SENSITIVE_ATTRIBUTE_NAMES,
+    "values": SECURITY_SENSITIVE_ATTRIBUTE_NAMES,
+    "from": SECURITY_SENSITIVE_ATTRIBUTE_NAMES
+  },
+  "set": {
+    "attributename": true,
+    "to": SECURITY_SENSITIVE_ATTRIBUTE_NAMES
+  },
+  "animatemotion": {
+    "attributename": true
+  },
+  "animatetransform": {
+    "attributename": true
+  }
 };
-function ɵɵvalidateAttribute(value, tagName, attributeName2) {
+function ɵɵvalidateAttribute(value, tagName, attributeName) {
   const lowerCaseTagName = tagName.toLowerCase();
-  const lowerCaseAttrName = attributeName2.toLowerCase();
-  if (!SECURITY_SENSITIVE_ELEMENTS[lowerCaseTagName]?.has(lowerCaseAttrName)) {
+  const lowerCaseAttrName = attributeName.toLowerCase();
+  const validationConfig = SECURITY_SENSITIVE_ELEMENTS[lowerCaseTagName]?.[lowerCaseAttrName];
+  if (!validationConfig) {
     return value;
   }
   const tNode = getSelectedTNode();
@@ -9473,8 +9520,18 @@ function ɵɵvalidateAttribute(value, tagName, attributeName2) {
     const element = getNativeByTNode(tNode, lView);
     enforceIframeSecurity(element);
   }
-  const errorMessage = ngDevMode && `Angular has detected that the \`${attributeName2}\` was applied as a binding to the <${tagName}> element${getTemplateLocationDetails(lView)}. For security reasons, the \`${attributeName2}\` can be set on the <${tagName}> element as a static attribute only. 
-To fix this, switch the \`${attributeName2}\` binding to a static attribute in a template or in host bindings section.`;
+  if (typeof validationConfig !== "boolean") {
+    const element = getNativeByTNode(tNode, lView);
+    const attributeNameValue = element.getAttribute("attributeName");
+    if (attributeNameValue && validationConfig.has(attributeNameValue.toLowerCase())) {
+      const errorMessage2 = ngDevMode && `Angular has detected that the \`${attributeName}\` was applied as a binding to the <${tagName}> element${getTemplateLocationDetails(lView)}. For security reasons, the \`${attributeName}\` can be set on the <${tagName}> element as a static attribute only when the "attributeName" is set to '${attributeNameValue}'. 
+To fix this, switch the \`${attributeNameValue}\` binding to a static attribute in a template or in host bindings section.`;
+      throw new RuntimeError(-910, errorMessage2);
+    }
+    return value;
+  }
+  const errorMessage = ngDevMode && `Angular has detected that the \`${attributeName}\` was applied as a binding to the <${tagName}> element${getTemplateLocationDetails(lView)}. For security reasons, the \`${attributeName}\` can be set on the <${tagName}> element as a static attribute only. 
+To fix this, switch the \`${attributeName}\` binding to a static attribute in a template or in host bindings section.`;
   throw new RuntimeError(-910, errorMessage);
 }
 var NG_REFLECT_ATTRS_FLAG_DEFAULT = false;
@@ -10617,6 +10674,7 @@ function applyToElementOrContainer(action, renderer, injector, parent, lNodeToHa
       if (parentLView?.[ANIMATIONS]?.leave?.has(tNode.index)) {
         trackLeavingNodes(tNode, rNode);
       }
+      reusedNodes.delete(rNode);
       runLeaveAnimationsWithCallback(parentLView, tNode, injector, (nodeHasLeaveAnimations) => {
         if (reusedNodes.has(rNode)) {
           reusedNodes.delete(rNode);
@@ -10625,6 +10683,7 @@ function applyToElementOrContainer(action, renderer, injector, parent, lNodeToHa
         nativeRemoveNode(renderer, rNode, isComponent2, nodeHasLeaveAnimations);
       });
     } else if (action === 3) {
+      reusedNodes.delete(rNode);
       runLeaveAnimationsWithCallback(parentLView, tNode, injector, () => {
         renderer.destroyNode(rNode);
       });
@@ -14713,7 +14772,7 @@ var ComponentFactory2 = class extends ComponentFactory$1 {
   }
 };
 function createRootTView(rootSelectorOrNode, componentDef, componentBindings, directives) {
-  const tAttributes = rootSelectorOrNode ? ["ng-version", "21.2.5"] : extractAttrsAndClassesFromSelector(componentDef.selectors[0]);
+  const tAttributes = rootSelectorOrNode ? ["ng-version", "21.2.9"] : extractAttrsAndClassesFromSelector(componentDef.selectors[0]);
   let creationBindings = null;
   let updateBindings = null;
   let varsToAllocate = 0;
@@ -15059,7 +15118,10 @@ function populateDehydratedViewsInLContainerImpl(lContainer, tNode, hostLView) {
   }
   const currentRNode = getSegmentHead(hydrationInfo, noOffsetIndex);
   const serializedViews = hydrationInfo.data[CONTAINERS]?.[noOffsetIndex];
-  ngDevMode && assertDefined(serializedViews, "Unexpected state: no hydration info available for a given TNode, which represents a view container.");
+  if (serializedViews === void 0) {
+    ngDevMode && console.warn("Unexpected state: no hydration info available for a given TNode, which represents a view container.");
+    return false;
+  }
   const [commentNode, dehydratedViews] = locateDehydratedViewsInContainer(currentRNode, serializedViews);
   if (ngDevMode) {
     validateMatchingNode(commentNode, Node.COMMENT_NODE, null, hostLView, tNode, true);
@@ -18500,9 +18562,11 @@ function triggerResourceLoading(tDetails, lView, tNode) {
   }
   tDetails.loadingPromise = Promise.allSettled(dependenciesFn()).then((results) => {
     let failed = false;
+    let failedReason = null;
     const directiveDefs = [];
     const pipeDefs = [];
-    for (const result of results) {
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
       if (result.status === "fulfilled") {
         const dependency = result.value;
         const directiveDef = getComponentDef(dependency) || getDirectiveDef(dependency);
@@ -18516,6 +18580,7 @@ function triggerResourceLoading(tDetails, lView, tNode) {
         }
       } else {
         failed = true;
+        failedReason = result.reason instanceof Error ? result.reason : new Error(String(result.reason));
         break;
       }
     }
@@ -18523,7 +18588,32 @@ function triggerResourceLoading(tDetails, lView, tNode) {
       tDetails.loadingState = DeferDependenciesLoadingState.FAILED;
       if (tDetails.errorTmplIndex === null) {
         const templateLocation = ngDevMode ? getTemplateLocationDetails(lView) : "";
-        const error = new RuntimeError(-750, ngDevMode && `Loading dependencies for \`@defer\` block failed, but no \`@error\` block was configured${templateLocation}. Consider using the \`@error\` block to render an error state.`);
+        let errorMsg = "";
+        if (ngDevMode) {
+          errorMsg = `Loading dependencies for \`@defer\` block failed, but no \`@error\` block was configured${templateLocation}. Consider using the \`@error\` block to render an error state.`;
+          const depsFn = tDetails.dependencyResolverFn;
+          const errorReason = failedReason?.message;
+          if (depsFn) {
+            errorMsg += `
+
+Angular tried to invoke the following dependency function (compiler-generated):
+\`\`\`
+${depsFn.toString()}
+\`\`\``;
+          }
+          if (errorReason) {
+            errorMsg += depsFn ? `
+
+but it resulted in the following error:
+
+${errorReason}` : `
+
+The loading resulted in the following error:
+
+${errorReason}`;
+          }
+        }
+        const error = new RuntimeError(-750, errorMsg);
         handleUncaughtError(lView, error);
       }
     } else {
@@ -22313,14 +22403,14 @@ function ɵɵattachSourceLocations(templatePath, locations) {
   const tView = getTView();
   const lView = getLView();
   const renderer = lView[RENDERER];
-  const attributeName2 = "data-ng-source-location";
+  const attributeName = "data-ng-source-location";
   for (const [index, offset, line, column] of locations) {
     const tNode = getTNode(tView, index + HEADER_OFFSET);
     ngDevMode && assertTNodeType(tNode, 2);
     const node = getNativeByIndex(index + HEADER_OFFSET, lView);
-    if (!node.hasAttribute(attributeName2)) {
+    if (!node.hasAttribute(attributeName)) {
       const attributeValue = `${templatePath}@o:${offset},l:${line},c:${column}`;
-      renderer.setAttribute(node, attributeName2, attributeValue);
+      renderer.setAttribute(node, attributeName, attributeValue);
     }
   }
 }
@@ -24978,7 +25068,6 @@ function createMouseSpecialEvent(e, target) {
   copy["_originalEvent"] = e;
   return copy;
 }
-var isIos = typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent);
 var EventContractContainer = class {
   element;
   handlerInfos = [];
@@ -24986,9 +25075,6 @@ var EventContractContainer = class {
     this.element = element;
   }
   addEventListener(eventType, getHandler, passive) {
-    if (isIos) {
-      this.element.style.cursor = "pointer";
-    }
     this.handlerInfos.push(addEventListener(this.element, eventType, getHandler(this.element), passive));
   }
   cleanUp() {
@@ -25605,8 +25691,8 @@ var Framework;
 })(Framework || (Framework = {}));
 var HostAttributeToken = class {
   attributeName;
-  constructor(attributeName2) {
-    this.attributeName = attributeName2;
+  constructor(attributeName) {
+    this.attributeName = attributeName;
   }
   __NG_ELEMENT_ID__ = () => ɵɵinjectAttribute(this.attributeName);
   toString() {
@@ -28905,4 +28991,4 @@ export {
   RESPONSE_INIT,
   REQUEST_CONTEXT
 };
-//# sourceMappingURL=chunk-L7GZKQ5W.js.map
+//# sourceMappingURL=chunk-LIAPGNGM.js.map

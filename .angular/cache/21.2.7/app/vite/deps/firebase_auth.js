@@ -28,14 +28,14 @@ import {
   querystring,
   querystringDecode,
   registerVersion
-} from "./chunk-YID456VA.js";
+} from "./chunk-3NZYZMAX.js";
 import {
   __objRest,
   __spreadProps,
   __spreadValues
 } from "./chunk-GOMI4DH3.js";
 
-// node_modules/@firebase/auth/dist/esm/index-dfb5c973.js
+// node_modules/@firebase/auth/dist/esm/index-568d0403.js
 var FactorId = {
   /** Phone as second factor */
   PHONE: "phone",
@@ -7926,7 +7926,7 @@ function _isEmptyString(input) {
   return typeof input === "undefined" || input?.length === 0;
 }
 var name = "@firebase/auth";
-var version = "1.12.2";
+var version = "1.13.0";
 var AuthInterop = class {
   constructor(auth) {
     this.auth = auth;

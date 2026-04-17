@@ -1418,7 +1418,7 @@ function isVersionServiceProvider(provider) {
   return component?.type === "VERSION";
 }
 var name$q = "@firebase/app";
-var version$1 = "0.14.10";
+var version$1 = "0.14.11";
 var logger = new Logger("@firebase/app");
 var name$p = "@firebase/app-compat";
 var name$o = "@firebase/analytics-compat";
@@ -1446,7 +1446,7 @@ var name$3 = "@firebase/firestore";
 var name$2 = "@firebase/ai";
 var name$1 = "@firebase/firestore-compat";
 var name = "firebase";
-var version = "12.11.0";
+var version = "12.12.0";
 var DEFAULT_ENTRY_NAME2 = "[DEFAULT]";
 var PLATFORM_LOG_STRING = {
   [name$q]: "fire-core",
@@ -2238,4 +2238,4 @@ export {
   onLog,
   setLogLevel2 as setLogLevel
 };
-//# sourceMappingURL=chunk-YID456VA.js.map
+//# sourceMappingURL=chunk-3NZYZMAX.js.map

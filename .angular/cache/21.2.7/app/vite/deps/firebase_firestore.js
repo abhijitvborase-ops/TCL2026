@@ -21,7 +21,7 @@ import {
   isSafariOrWebkit,
   pingServer,
   registerVersion
-} from "./chunk-YID456VA.js";
+} from "./chunk-3NZYZMAX.js";
 import {
   __spreadProps,
   __spreadValues
@@ -2521,7 +2521,7 @@ var createWebChannelTransport;
   XhrIo = webchannel_blob_es2018.XhrIo = X2;
 }).apply(typeof commonjsGlobal2 !== "undefined" ? commonjsGlobal2 : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
 
-// node_modules/@firebase/firestore/dist/common-edb5d170.esm.js
+// node_modules/@firebase/firestore/dist/common-fe7037b3.esm.js
 var User = class {
   constructor(e) {
     this.uid = e;
@@ -2543,7 +2543,7 @@ var User = class {
 User.UNAUTHENTICATED = new User(null), // TODO(mikelehen): Look into getting a proper uid-equivalent for
 // non-FirebaseAuth providers.
 User.GOOGLE_CREDENTIALS = new User("google-credentials-uid"), User.FIRST_PARTY = new User("first-party-uid"), User.MOCK_USER = new User("mock-user");
-var b = "12.11.0";
+var b = "12.12.0";
 function __PRIVATE_setSDKVersion(e) {
   b = e;
 }
@@ -16677,7 +16677,7 @@ var __PRIVATE_UserDataReader = class {
     this.databaseId = e, this.ignoreUndefinedProperties = t, this.serializer = n || __PRIVATE_newSerializer(e);
   }
   /** Creates a new top-level parse context. */
-  A(e, t, n, r = false) {
+  I(e, t, n, r = false) {
     return new __PRIVATE_ParseContextImpl({
       dataSource: e,
       methodName: t,
@@ -16693,7 +16693,7 @@ function __PRIVATE_newUserDataReader(e) {
   return new __PRIVATE_UserDataReader(e._databaseId, !!t.ignoreUndefinedProperties, n);
 }
 function __PRIVATE_parseSetData(e, t, n, r, i, s = {}) {
-  const o = e.A(s.merge || s.mergeFields ? 2 : 0, t, n, i);
+  const o = e.I(s.merge || s.mergeFields ? 2 : 0, t, n, i);
   __PRIVATE_validatePlainObject("Data must be an object, but it was:", o, r);
   const _ = __PRIVATE_parseObject(r, o);
   let a, u;
@@ -16781,7 +16781,7 @@ var __PRIVATE_NumericIncrementFieldValueImpl = class ___PRIVATE_NumericIncrement
   }
 };
 function __PRIVATE_parseUpdateData(e, t, n, r) {
-  const i = e.A(1, t, n);
+  const i = e.I(1, t, n);
   __PRIVATE_validatePlainObject("Data must be an object, but it was:", i, r);
   const s = [], o = ObjectValue.empty();
   forEach(r, ((e2, r2) => {
@@ -16799,7 +16799,7 @@ function __PRIVATE_parseUpdateData(e, t, n, r) {
   return new ParsedUpdateData(o, _, i.fieldTransforms);
 }
 function __PRIVATE_parseUpdateVarargs(e, t, n, r, i, s) {
-  const o = e.A(1, t, n), _ = [__PRIVATE_fieldPathFromArgument(t, r, n)], a = [i];
+  const o = e.I(1, t, n), _ = [__PRIVATE_fieldPathFromArgument(t, r, n)], a = [i];
   if (s.length % 2 != 0) throw new FirestoreError(D.INVALID_ARGUMENT, `Function ${t}() needs to be called with an even number of arguments that alternate between field names and values.`);
   for (let e2 = 0; e2 < s.length; e2 += 2) _.push(__PRIVATE_fieldPathFromArgument(t, s[e2])), a.push(s[e2 + 1]);
   const u = [], c = ObjectValue.empty();
@@ -16819,7 +16819,7 @@ function __PRIVATE_parseUpdateVarargs(e, t, n, r, i, s) {
   return new ParsedUpdateData(c, l, o.fieldTransforms);
 }
 function __PRIVATE_parseQueryValue(e, t, n, r = false) {
-  return __PRIVATE_parseData(n, e.A(r ? 4 : 3, t));
+  return __PRIVATE_parseData(n, e.I(r ? 4 : 3, t));
 }
 function __PRIVATE_parseData(e, t) {
   if (__PRIVATE_looksLikeJsonObject(
@@ -17135,7 +17135,7 @@ function _internalAggregationQueryToProtoRunAggregationQueryRequest(e, t) {
 
 // node_modules/@firebase/firestore/dist/index.esm.js
 var Ut2 = "@firebase/firestore";
-var Ht2 = "4.13.0";
+var Ht2 = "4.14.0";
 function __PRIVATE_isPartialObserver(t) {
   return (function __PRIVATE_implementsAnyMethods(t2, e) {
     if ("object" != typeof t2 || null === t2) return false;

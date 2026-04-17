@@ -60,7 +60,7 @@ import {
   ɵɵinject,
   ɵɵinjectAttribute,
   ɵɵstyleProp
-} from "./chunk-L7GZKQ5W.js";
+} from "./chunk-LIAPGNGM.js";
 import {
   __spreadProps,
   __spreadValues
@@ -3424,7 +3424,7 @@ function isPlatformBrowser(platformId) {
 function isPlatformServer(platformId) {
   return platformId === PLATFORM_SERVER_ID;
 }
-var VERSION = new Version("21.2.5");
+var VERSION = new Version("21.2.9");
 var ViewportScroller = class _ViewportScroller {
   static ɵprov = ɵɵdefineInjectable({
     token: _ViewportScroller,
@@ -4039,6 +4039,9 @@ var NgOptimizedImage = class _NgOptimizedImage {
         }
       });
     }
+    this.destroyRef.onDestroy(() => {
+      this.renderer.removeAttribute(this.imgElement, "loading");
+    });
   }
   ngOnInit() {
     performanceMarkFeature("NgOptimizedImage");
@@ -4796,4 +4799,4 @@ export {
   PRECONNECT_CHECK_BLOCKLIST,
   NgOptimizedImage
 };
-//# sourceMappingURL=chunk-Y4A4PNS6.js.map
+//# sourceMappingURL=chunk-IBSN242Q.js.map
