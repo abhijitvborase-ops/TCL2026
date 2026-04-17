@@ -1,7 +1,18 @@
+<!-- 🔥 TIMER -->
+<div class="flex justify-center mb-3">
+  <div class="px-4 py-1 rounded-full text-sm font-semibold shadow-lg"
+       [class.bg-green-500]="auctionService.timeLeft() > 20"
+       [class.bg-red-500]="auctionService.timeLeft() <= 20"
+       class="text-white">
+
+    ⏳ {{ auctionService.timeLeft() }} sec
+  </div>
+</div>
+
 <div class="scene">
   <div class="cube" [class]="cubeClass()">
 
-    <!-- Front (ONLY RESULT) -->
+        <!-- Front (ONLY RESULT) -->
     <div class="cube__face cube__face--front">
       <span class="text-base font-bold">
         {{ diceResult()?.name || 'TCL 2026' }}

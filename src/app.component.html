@@ -333,6 +333,12 @@
   class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 disabled:bg-gray-500 disabled:cursor-not-allowed text-lg">
                   Roll for Pick {{ auctionService.roundOrder().length + 1 }}
                 </button>
+                <button *ngIf="auctionService.timeLeft() <= 0"
+        (click)="auctionService.extendTimer()"
+        class="bg-yellow-500 text-white px-3 py-1 rounded mt-2">
+
+  +1 Min
+</button>
               } @else {
                  <button (click)="onNextRound()" [disabled]="!auctionService.isRoundCompleted()" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 disabled:bg-gray-500 disabled:cursor-not-allowed text-lg">
                   Next Round

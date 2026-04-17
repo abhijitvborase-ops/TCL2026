@@ -38,6 +38,10 @@ export class AuctionService {
   // Auction flow signals
   currentRound = signal(1);
   diceResult = signal<Team | null>(null);
+  timerStart = signal<number | null>(null);
+  timerDuration = signal<number>(0);
+  timerActive = signal<boolean>(false);
+  timeLeft = signal<number>(0);   
   roundOrder = signal<Team[]>([]);
   turnIndex = signal(0);
   isRolling = signal(false);
@@ -80,6 +84,18 @@ export class AuctionService {
   canUndo = computed(() => this.lastDraftAction() !== null);
 
   constructor(private firebase: FirebaseService) {
+    setInterval(() => {
+  if (!this.timerActive() || !this.timerStart()) return;
+
+  const elapsed = Math.floor((Date.now() - this.timerStart()!) / 1000);
+  const remaining = this.timerDuration() - elapsed;
+
+  this.timeLeft.set(Math.max(0, remaining));
+
+  if (remaining <= 0) {
+    this.timerActive.set(false);
+  }
+}, 1000);
     console.log("AuctionService constructor called");
     this.loadStateFromStorage();
     this.listenToTeams();   // 👈 FIRST
@@ -119,6 +135,9 @@ export class AuctionService {
     this.currentRound.set(data.currentRound || 1);
     this.turnIndex.set(data.turnIndex || 0);
     this.isAuctionActive.set(data.isActive || false);
+    this.timerStart.set(data.timerStart || null);
+    this.timerDuration.set(data.timerDuration || 0);
+    this.timerActive.set(data.timerActive || false);
     // 🔥 if auction ended → force screen change
 if (data.status === 'ended') {
   this.auctionState.set('auction_ended');
@@ -331,12 +350,35 @@ await new Promise(resolve => setTimeout(resolve, 2000));
 
   // 🔥 RESULT + STOP rolling
   await updateDoc(auctionRef, {
-    diceTeamId: pickedTeam.id,
-    roundOrder: [...new Set([...currentIds, pickedTeam.id])],
-    isRolling: false
-  });
+  diceTeamId: pickedTeam.id,
+  roundOrder: [...new Set([...currentIds, pickedTeam.id])],
+  isRolling: false,
+
+  // 🔥 TIMER START ADD HERE
+  timerStart: Date.now(),
+  timerDuration: 120,
+  timerActive: true
+});
   }
+  async extendTimer() {
+  // 🔒 फक्त admin
+  if (this.currentUser()?.role !== 'admin') return;
+
+  const auctionRef = doc(this.firebase.db, "auction", "live");
+
+  // 🔥 current duration घ्या
+  const currentDuration = this.timerDuration();
+
+  await updateDoc(auctionRef, {
+    timerDuration: currentDuration + 60 // +1 minute
+  });
+}
   async draftPlayer(player: Player) {
+    // 🔥 TIME OVER CHECK
+if (this.timeLeft() <= 0) {
+  alert("Time over ❌");
+  return;
+}
     const pickingTeam = this.pickingTeam();
     if (!pickingTeam || !this.isMyTurn()) return;
 
