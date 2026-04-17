@@ -1,51 +1,27 @@
 <div class="scene">
   <div class="cube" [class]="cubeClass()">
 
-    <!-- Front -->
+    <!-- Front (ONLY RESULT) -->
     <div class="cube__face cube__face--front">
-      <div class="flex flex-col items-center justify-center">
-        <span class="text-base font-bold">
-          {{ diceResult() ? teams()[0]?.name : 'TCL 2026' }}
-        </span>
-      </div>
+      <span class="text-base font-bold">
+        {{ diceResult()?.name || 'TCL 2026' }}
+      </span>
     </div>
 
     <!-- Back -->
-    <div class="cube__face cube__face--back">
-      <div class="flex flex-col items-center justify-center">
-        <span class="text-base font-bold">
-          {{ diceResult() ? teams()[2]?.name : 'TCL 2026' }}
-        </span>
-      </div>
-    </div>
+    <div class="cube__face cube__face--back"></div>
 
     <!-- Right -->
-    <div class="cube__face cube__face--right">
-      <div class="flex flex-col items-center justify-center">
-        <span class="text-base font-bold">
-          {{ diceResult() ? teams()[1]?.name : 'TCL 2026' }}
-        </span>
-      </div>
-    </div>
+    <div class="cube__face cube__face--right"></div>
 
     <!-- Left -->
-    <div class="cube__face cube__face--left">
-      <div class="flex flex-col items-center justify-center">
-        <span class="text-base font-bold">
-          {{ diceResult() ? teams()[3]?.name : 'TCL 2026' }}
-        </span>
-      </div>
-    </div>
+    <div class="cube__face cube__face--left"></div>
 
     <!-- Top -->
-    <div class="cube__face cube__face--top">
-      <i data-lucide="swords" class="w-12 h-12 text-gray-500"></i>
-    </div>
+    <div class="cube__face cube__face--top"></div>
 
     <!-- Bottom -->
-    <div class="cube__face cube__face--bottom">
-      <i data-lucide="shield" class="w-12 h-12 text-gray-500"></i>
-    </div>
+    <div class="cube__face cube__face--bottom"></div>
 
   </div>
 </div>

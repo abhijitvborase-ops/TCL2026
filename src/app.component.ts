@@ -90,7 +90,12 @@ openPlayerViewer(index: number) {
   });
 
   ngOnInit() {
+  const savedUser = JSON.parse(localStorage.getItem("user") || 'null');
+
+  if (savedUser?.username) {
+    this.auctionService.login(savedUser.username);
   }
+}
 
   ngAfterViewChecked() {
     lucide.createIcons();
@@ -105,12 +110,25 @@ openPlayerViewer(index: number) {
     .then(() => {
       alert("Login success");
 
+      localStorage.setItem("user", JSON.stringify({ username }));
       // 🔥 IMPORTANT LINE (missing)
       this.auctionService.login(username);
+      this.loginUsername.set('');
+      this.loginPassword.set('');
     })
     .catch(() => {
       alert("Wrong username/password");
     });
+}
+logout() {
+  // ✅ clear storage
+  localStorage.removeItem("user");
+
+  // ✅ reset auction user state
+  this.auctionService.returnToLogin();
+
+  // ✅ HARD refresh (important)
+  location.reload();
 }
   onEnterPublicView() {
     this.auctionService.enterPublicView();
@@ -124,10 +142,13 @@ openPlayerViewer(index: number) {
     this.auctionService.startAuction();
   }
 
-  onRollForNextPick() {
-    this.auctionService.rollForNextPick();
+ onRollForNextPick() {
+  if (this.auctionService.isRolling() || this.auctionService.teams().length === 0) {
+    return;
   }
-  
+
+  this.auctionService.rollForNextPick();
+}  
   onNextRound() {
     this.auctionService.nextRound();
   }

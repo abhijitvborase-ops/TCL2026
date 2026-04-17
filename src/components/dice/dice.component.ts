@@ -19,26 +19,28 @@ export class DiceComponent {
   diceResult = this.auctionService.diceResult;
 
   teams = this.auctionService.teams;
-  
+  getFaceTeamName(index: number): string {
+
+  if (this.isRolling()) {
+    return 'Rolling... 🎲';
+  }
+
+  const result = this.diceResult();
+
+  if (!result) {
+    return 'TCL 2026';
+  }
+
+  const teams = this.teams();
+
+  return teams?.[index]?.name ?? 'TCL 2026';
+}
   cubeClass = computed(() => {
-    if (this.isRolling()) {
-      return 'rolling';
-    }
+  if (this.isRolling()) {
+    return 'rolling';
+  }
 
-    const team = this.diceResult();
-    if (team) {
-      const currentTeams = this.teams();
-      const teamIndex = currentTeams.findIndex(t => t.id === team.id);
-
-      switch (teamIndex) {
-        case 0: return 'show-front';
-        case 1: return 'show-right';
-        case 2: return 'show-back';
-        case 3: return 'show-left';
-        default: return '';
-      }
-    }
-
-    return '';
-  });
+  // 🔥 ALWAYS SHOW FRONT (NO MISMATCH)
+  return 'show-front';
+});
 }

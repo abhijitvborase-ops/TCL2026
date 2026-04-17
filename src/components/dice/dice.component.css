@@ -1,8 +1,8 @@
-
 .scene {
-  width: 100px;
-  height: 100px;
-  perspective: 600px;
+  width: 140px;
+  height: 140px;
+  perspective: 800px;
+  margin: auto;
 }
 
 .cube {
@@ -10,46 +10,54 @@
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 2s ease-in-out;
+  transform: translateZ(-70px);
+  transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .cube.rolling {
-  animation: roll 2s ease-out forwards;
+  animation: roll 1.5s ease-out forwards;
 }
 
 @keyframes roll {
-    0% { transform: rotateX(0deg) rotateY(0deg); }
-    100% { transform: rotateX(1080deg) rotateY(720deg); }
+  0% { transform: rotateX(0deg) rotateY(0deg); }
+  50% { transform: rotateX(720deg) rotateY(360deg); }
+  100% { transform: rotateX(1080deg) rotateY(720deg); }
 }
 
-
+/* 🎨 FACE STYLE */
 .cube__face {
   position: absolute;
-  width: 100px;
-  height: 100px;
-  border: 2px solid #e5e7eb; /* gray-200 */
-  background-color: rgba(31, 41, 55, 0.8); /* gray-800 with opacity */
-  font-size: 48px;
+  width: 140px;
+  height: 140px;
+  border-radius: 15px;
+  font-size: 14px;
   font-weight: bold;
-  color: #f9fafb; /* gray-50 */
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
 }
 
-.cube__face--front  { transform: rotateY(  0deg) translateZ(50px); }
-.cube__face--back   { transform: rotateY(180deg) translateZ(50px); }
-.cube__face--right  { transform: rotateY( 90deg) translateZ(50px); }
-.cube__face--left   { transform: rotateY(-90deg) translateZ(50px); }
-.cube__face--top    { transform: rotateX( 90deg) translateZ(50px); }
-.cube__face--bottom { transform: rotateX(-90deg) translateZ(50px); }
+/* 🎨 Colorful faces */
+.cube__face--front  { background: linear-gradient(135deg, #ff416c, #ff4b2b); transform: rotateY(0deg) translateZ(70px); }
+.cube__face--back   { background: linear-gradient(135deg, #1e3c72, #2a5298); transform: rotateY(180deg) translateZ(70px); }
+.cube__face--right  { background: linear-gradient(135deg, #11998e, #38ef7d); transform: rotateY(90deg) translateZ(70px); }
+.cube__face--left   { background: linear-gradient(135deg, #f7971e, #ffd200); transform: rotateY(-90deg) translateZ(70px); }
+.cube__face--top    { background: linear-gradient(135deg, #8e2de2, #4a00e0); transform: rotateX(90deg) translateZ(70px); }
+.cube__face--bottom { background: linear-gradient(135deg, #00c6ff, #0072ff); transform: rotateX(-90deg) translateZ(70px); }
 
-/* Final positions after roll */
-.cube.show-front { transform: translateZ(-50px) rotateY(0deg); }
-.cube.show-back { transform: translateZ(-50px) rotateY(-180deg); }
-.cube.show-right { transform: translateZ(-50px) rotateY(-90deg); }
-.cube.show-left { transform: translateZ(-50px) rotateY(90deg); }
-.cube.show-top { transform: translateZ(-50px) rotateX(-90deg); }
-.cube.show-bottom { transform: translateZ(-50px) rotateX(90deg); }
+/* ✨ Glow effect */
+.cube:hover .cube__face {
+  box-shadow: 0 0 25px rgba(255,255,255,0.6);
+}
+
+/* 🎲 Final positions */
+.cube.show-front  { transform: rotateY(0deg) translateZ(-70px); }
+.cube.show-back   { transform: rotateY(-180deg) translateZ(-70px); }
+.cube.show-right  { transform: rotateY(-90deg) translateZ(-70px); }
+.cube.show-left   { transform: rotateY(90deg) translateZ(-70px); }
+.cube.show-top    { transform: rotateX(-90deg) translateZ(-70px); }
+.cube.show-bottom { transform: rotateX(90deg) translateZ(-70px); }

@@ -5,6 +5,7 @@ import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { collection } from 'firebase/firestore';
 import { setDoc } from 'firebase/firestore';
 import { getDocs } from 'firebase/firestore';
+import { ChangeDetectorRef } from '@angular/core';
 
 export type AuctionState = 'login' | 'public_view' | 'admin_lobby' | 'admin_view' | 'team_view' | 'auction_ended';
 export type DraftAnnouncement = { player: Player; team: Team };
@@ -22,7 +23,7 @@ const AUCTION_STATUS_KEY = 'tcl2026_auction_status';
 })
 export class AuctionService {
   readonly MAX_ROUNDS = 15;
-  readonly TEAMS_PER_ROUND = 4;
+  readonly TEAMS_PER_ROUND = 5;
   
   // State Signals
   auctionState: WritableSignal<AuctionState> = signal('login');
@@ -42,9 +43,10 @@ export class AuctionService {
   isRolling = signal(false);
   errorMessage = signal<string | null>(null);
   lastDraftedPlayerInfo = signal<DraftAnnouncement | null>(null);
-
+  
   // Store latest auction data from Firebase
   private latestAuctionData: any = null;
+  private lastProcessedState: any = null;
 
   // Undo functionality
   lastDraftAction = signal<{ player: Player; teamId: number } | null>(null);
@@ -117,20 +119,27 @@ export class AuctionService {
     this.currentRound.set(data.currentRound || 1);
     this.turnIndex.set(data.turnIndex || 0);
     this.isAuctionActive.set(data.isActive || false);
-    this.isRolling.set(data.isRolling || false);
-    // 🔥 dice result
-    this.diceResult.set(
-      data.diceTeamId
-        ? this.teams().find(t => t.id === data.diceTeamId) || null
-        : null
-    );
+    // 🔥 only update if changed (IMPORTANT)
+if (this.isRolling() !== (data.isRolling || false)) {
+  this.isRolling.set(data.isRolling || false);
+}
+      // 🔥 round order
+    const newOrder = (data.roundOrder || [])
+  .map((id: number) => this.teams().find(t => t.id === id))
+  .filter(Boolean) as Team[];
 
-    // 🔥 round order
-    this.roundOrder.set(
-      (data.roundOrder || [])
-        .map((id: number) => this.teams().find(t => t.id === id))
-        .filter(Boolean) as Team[]
-    );
+// 🔥 only update if changed
+if (JSON.stringify(this.roundOrder()) !== JSON.stringify(newOrder)) {
+  this.roundOrder.set(newOrder);
+}
+// 🔥 sync dice with latest Firebase order (NO DELAY)
+if (newOrder.length > 0) {
+  const lastTeam = newOrder[newOrder.length - 1];
+
+  if (this.diceResult()?.id !== lastTeam.id) {
+    this.diceResult.set(lastTeam);
+  }
+}
   }
 
   private handleStorageChange(event: StorageEvent) {
@@ -268,13 +277,17 @@ export class AuctionService {
   this.auctionState.set('admin_view');
 }
   async rollForNextPick() {
-  const teamsInRound = this.roundOrder();
-  const allTeams = this.teams();
+    // 🔥 NEW GUARD (ADD THIS AT TOP)
+const allTeams = this.teams();
 
+if (!allTeams || allTeams.length === 0) {
+  console.log("Teams not loaded yet ❌");
+  return;
+}
+  const teamsInRound = this.roundOrder();
   if (
     this.isRolling() ||
-    teamsInRound.length >= allTeams.length ||
-    teamsInRound.length >= this.TEAMS_PER_ROUND
+    teamsInRound.length >= allTeams.length
   ) {
     return;
   }
@@ -283,8 +296,9 @@ export class AuctionService {
 
   // 🔥 START rolling (ALL USERS)
   await updateDoc(auctionRef, {
-    isRolling: true
-  });
+  isRolling: true,
+  diceTeamId: null   // 🔥 IMPORTANT FIX
+});
 // 🔥 WAIT for animation (2 seconds)
 await new Promise(resolve => setTimeout(resolve, 2000));
   const availableToPick = allTeams.filter(
@@ -298,7 +312,7 @@ await new Promise(resolve => setTimeout(resolve, 2000));
 
   const pickedTeam =
     availableToPick[Math.floor(Math.random() * availableToPick.length)];
-
+    
   const currentIds = teamsInRound.map(t => t.id);
 
   // 🔥 RESULT + STOP rolling
@@ -307,7 +321,7 @@ await new Promise(resolve => setTimeout(resolve, 2000));
     roundOrder: [...new Set([...currentIds, pickedTeam.id])],
     isRolling: false
   });
-}
+  }
   async draftPlayer(player: Player) {
     const pickingTeam = this.pickingTeam();
     if (!pickingTeam || !this.isMyTurn()) return;
@@ -623,22 +637,34 @@ listenToFirebaseAuction() {
   const auctionRef = doc(this.firebase.db, "auction", "live");
 
   onSnapshot(auctionRef, (docSnap) => {
-    console.log("Firebase auction snapshot received:", docSnap.exists(), docSnap.data());
-    if (docSnap.exists()) {
-      this.latestAuctionData = docSnap.data();
-      this.updateAuctionDataWithTeams();
-    } else {
-      this.latestAuctionData = null;
-      // Reset auction data
-      this.currentRound.set(1);
-      this.turnIndex.set(0);
-      this.isAuctionActive.set(false);
-      this.diceResult.set(null);
-      this.roundOrder.set([]);
-    }
-  }, (error) => {
-    console.error("Error listening to auction:", error);
-  });
+
+  if (!docSnap.exists()) {
+    this.latestAuctionData = null;
+    this.currentRound.set(1);
+    this.turnIndex.set(0);
+    this.isAuctionActive.set(false);
+    this.diceResult.set(null);
+    this.roundOrder.set([]);
+    return;
+  }
+
+  const newData = docSnap.data();
+
+  // 🔥 duplicate snapshot ignore
+  if (JSON.stringify(this.lastProcessedState) === JSON.stringify(newData)) {
+    return;
+  }
+
+  // 🔥 save last state
+  this.lastProcessedState = newData;
+
+  // 🔥 update state
+  this.latestAuctionData = newData;
+  this.updateAuctionDataWithTeams();
+
+}, (error) => {
+  console.error("Error listening to auction:", error);
+});
 }
 listenToPlayers() {
   const playersRef = collection(this.firebase.db, "players");
@@ -672,7 +698,10 @@ listenToTeams() {
       ...doc.data()
     })) as any;
 
-    this.teams.set(teams);
+    // 🔥 only update if changed
+if (JSON.stringify(this.teams()) !== JSON.stringify(teams)) {
+  this.teams.set(teams);
+}
     
     // After teams are loaded, try to update auction data that depends on teams
     // this!.updateAuctionDataWithTeams();
